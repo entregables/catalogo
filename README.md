@@ -216,14 +216,22 @@ Swagger: deshabilitado
 
 ## 🔹 Paso 1. Detener entorno previo
 
+Antes de iniciar el escalado, detener los servicios que estuvieran levantados previamente:
+
 ```bash
 docker compose -f docker-compose.yml down
+```
+Si existieran contenedores manuales anteriores, también eliminarlos:
+
+```bash
 docker rm -f catalogo1 catalogo2 catalogo3
 ```
 
 ---
 
 ## 🔹 Paso 2. Levantar solo MySQL
+
+Levantar únicamente la base de datos del entorno de producción:
 
 ```bash
 docker compose -f docker-compose.yml up -d mysql-catalogo
@@ -232,6 +240,8 @@ docker compose -f docker-compose.yml up -d mysql-catalogo
 ---
 
 ## 🔹 Paso 3. Construir imagen
+
+Generar la imagen Docker de la aplicación:
 
 ```bash
 docker build -t catalogo-service .
@@ -246,8 +256,8 @@ docker build -t catalogo-service .
 ### Instancia 1
 
 ```bash
-docker run -d --name catalogo1 \
-  --network catalogo_default \
+docker run --name catalogo1 \
+  --network catalogo-net \
   --env-file .env \
   -p 8082:8082 \
   catalogo-service
@@ -257,19 +267,9 @@ docker run -d --name catalogo1 \
 
 ```bash
 docker run -d --name catalogo2 \
-  --network catalogo_default \
+  --network catalogo-net \
   --env-file .env \
   -p 8083:8082 \
-  catalogo-service
-```
-
-### Instancia 3
-
-```bash
-docker run -d --name catalogo3 \
-  --network catalogo_default \
-  --env-file .env \
-  -p 8084:8082 \
   catalogo-service
 ```
 
@@ -287,17 +287,52 @@ docker ps
 
 - http://localhost:8082
 - http://localhost:8083
-- http://localhost:8084
 
 ---
 
 ## 🔹 Paso 7. Finalizar
 
+🧠 Tip pro 
+
+stop → apaga contenedor (como apagar servidor)
+
+rm → elimina contenedor (como borrar VM)
+
+rmi → elimina imagen (como borrar ISO/base)
+```bash
+
+docker stop catalogo1
+docker rm catalogo1
+docker rmi catalogo-service   # opcional
+```
 ```bash
 docker rm -f catalogo1 catalogo2 catalogo3
 docker compose -f docker-compose.yml down
 ```
-
+Para ver todos los servicios (incluidos apagados):
+```bash
+docker ps -a
+```
+Detener todos los contenedores
+```bash
+docker stop $(docker ps -q)
+```
+Eliminar todos los contenedores
+```bash
+docker rm $(docker ps -aq)
+```
+Eliminar todas las imágenes
+```bash
+docker rmi $(docker images -q)
+```
+🚀 Elimina contenedores detenidos, imágenes no usadas, redes, cache
+```bash
+docker system prune -a
+```
+💣 Forma EXTREMA (incluye volúmenes)
+```bash
+docker system prune -a --volumes
+```
 ---
 
 ## 🔹 Ejecución sin `.env` (opcional)
