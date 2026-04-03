@@ -48,7 +48,8 @@ ProyectosMS2026/
 
 ---
 
-## ⚙️ Tecnologías
+## ⚙️ Stack tecnológico base 2026
+
 
 - Java 17
 - Spring Boot 3.5.x
