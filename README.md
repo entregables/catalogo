@@ -256,21 +256,13 @@ docker build -t catalogo-service .
 ### Instancia 1
 
 ```bash
-docker run --name catalogo1 \
-  --network catalogo-net \
-  --env-file .env \
-  -p 8082:8082 \
-  catalogo-service
+docker run --name catalogo1 --network catalogo-net --env-file .env -p 8082:8082 catalogo-service
 ```
 
 ### Instancia 2
 
 ```bash
-docker run -d --name catalogo2 \
-  --network catalogo-net \
-  --env-file .env \
-  -p 8083:8082 \
-  catalogo-service
+docker run --name catalogo2 --network catalogo-net --env-file .env -p 8083:8082 catalogo-service
 ```
 
 ---
@@ -347,6 +339,17 @@ docker run -d --name catalogo1 \
   -e CATALOGO_DB_NAME=db_catalogo \
   -e CATALOGO_DB_USERNAME=root \
   -e CATALOGO_DB_PASSWORD=root \
+  catalogo-service
+```
+
+```ps
+docker run --name catalogo3 --network catalogo-net -p 8084:8082 `
+  -e SPRING_PROFILES_ACTIVE=prod `
+  -e CATALOGO_DB_HOST=mysql-catalogo `
+  -e CATALOGO_DB_PORT=3306 `
+  -e CATALOGO_DB_NAME=db_catalogo `
+  -e CATALOGO_DB_USERNAME=root `
+  -e CATALOGO_DB_PASSWORD=root `
   catalogo-service
 ```
 
