@@ -1,50 +1,135 @@
-# Catálogo
+# 📦 Microservicio Catálogo
 
-Este proyecto es un microservicio de catálogo desarrollado en Java con Spring Boot. Proporciona una API REST para la gestión de categorías y otros recursos relacionados.
+Este proyecto implementa el **Microservicio Catálogo**, responsable de gestionar entidades del dominio dentro de una arquitectura de microservicios en evolución.
 
-## Estructura del proyecto
+---
 
-- **src/main/java/com/upeu/catalogo/**: Código fuente principal.
-- **src/main/resources/**: Archivos de configuración y recursos.
-- **src/test/java/com/upeu/catalogo/**: Pruebas unitarias y de integración.
-- **Dockerfile** y **docker-compose.yml**: Archivos para contenerización y orquestación.
+## 🧱 Estado del proyecto
 
-## Requisitos
+Actualmente incluye:
 
-- Java 17+
-- Maven 3.8+
-- Docker (opcional, para despliegue en contenedores)
+- API REST funcional
+- Persistencia con MySQL
+- Configuración por perfiles (`dev`, `prod`)
+- Contenerización con Docker
+- Preparado para integración con:
+  - Config Server
+  - Eureka
+  - API Gateway
 
+---
 
-## Ejecución en modo desarrollo (dev)
+## 🏗️ Arquitectura (visión)
 
-### Usando Maven y base de datos MySQL en docker
-1. Clona el repositorio.
-2. Levanta la base de datos MySQL para desarrollo:
-   ```sh
-   docker compose -f docker-compose-dev.yml up 
-   ```
-3. Ejecuta la aplicación fuera del IDE, perfil por defecto es `dev`:
-   ```sh
-   mvn spring-boot:run
-   ```
-4. Accede a la API en: [http://localhost:8081](http://localhost:8081)
+```text
+Client → Gateway → Microservicios → Eureka → Config Server
+```
 
-## Ejecución en modo producción (prod)
+> Este repositorio implementa únicamente el microservicio **Catálogo**.
 
-### Usando Docker Compose
-1. Configura las variables de entorno necesarias en un archivo `.env` (ver ejemplo abajo).
-2. Levanta todos los servicios (app y base de datos):
-   ```sh
-   docker compose -f docker-compose.yml up -d
-   ```
-3. Accede a la API en: [http://localhost:8082](http://localhost:8082)
+---
 
-#### Ejemplo de archivo `.env` para producción
+## 🧰 Pre-requisitos
+
+Antes de ejecutar el proyecto, asegúrate de tener instalado:
+
+- Java 17
+- Maven 3.9+
+- Docker
+- Docker Compose
+
+Verificar instalación:
+
+```bash
+java -version
+mvn -v
+docker -v
+docker compose version
+```
+
+---
+
+## 🔌 Puertos utilizados
+
+| Servicio            | Puerto expuesto |
+|--------------------|--------|
+| Aplicación (dev)   | 8081   |
+| Aplicación (prod)  | 8082   |
+| MySQL (dev)        | 3307   |
+| MySQL (prod)       | 3308   |
+
+---
+
+## 🔄 Diferencia entre DEV y PROD
+
+| Modo | Ejecución           | Base de datos | Puerto |
+|------|--------------------|--------------|--------|
+| DEV  | Maven              | Docker       | 8081   |
+| PROD | Docker Compose     | Docker       | 8082   |
+
+---
+
+## 🧠 ¿Por qué funciona `mysql-catalogo` como host?
+
+Dentro de Docker Compose, los contenedores pueden comunicarse usando el nombre del servicio.
+
+Ejemplo:
+
+```env
+CATALOGO_DB_HOST=mysql-catalogo
+```
+
+Esto funciona automáticamente porque Docker Compose crea una red interna por defecto.
+
+---
+
+# 🚀 Ejecución en modo desarrollo (dev)
+
+## 🔹 1. Clonar repositorio
+
+```bash
+git clone <repo>
+cd catalogo
+```
+
+---
+
+## 🔹 2. Levantar base de datos
+
+```bash
+docker compose -f docker-compose-dev.yml up
+```
+
+---
+
+## 🔹 3. Ejecutar aplicación
+
+```bash
+mvn spring-boot:run
+```
+
+👉 Perfil activo: `dev`
+
+---
+
+## 🌐 Acceso DEV
+
+```
+http://localhost:8081
+```
+
+---
+
+# 🐳 Ejecución en modo producción (prod)
+
+## 🔹 1. Crear archivo `.env`
+
 ```env
 CATALOGO_MYSQL_ROOT_PASSWORD=una_clave_segura
 CATALOGO_MYSQL_DATABASE=db_catalogo
+
 SPRING_PROFILES_ACTIVE=prod
+
 CATALOGO_DB_HOST=mysql-catalogo
 CATALOGO_DB_PORT=3306
 CATALOGO_DB_NAME=db_catalogo
@@ -52,75 +137,268 @@ CATALOGO_DB_USERNAME=root
 CATALOGO_DB_PASSWORD=una_clave_segura
 ```
 
+---
 
-## Escalado de la aplicación (varias instancias)
+## 🔹 2. Levantar servicios
 
-Para escalar la aplicación y que todas las instancias consuman la misma base de datos, sigue estos pasos:
+```bash
+docker compose -f docker-compose.yml up -d
+```
 
-### 1. Construye la imagen de la app (si no lo hiciste antes):
-```sh
+---
+
+## 🌐 Acceso PROD
+
+```
+http://localhost:8082
+```
+
+---
+
+# 📈 Escalado de la aplicación (múltiples instancias)
+
+---
+
+## 🔹 Paso 1. Detener entorno previo
+
+```bash
+docker compose -f docker-compose.yml down
+docker rm -f catalogo1 catalogo2 catalogo3
+```
+
+---
+
+## 🔹 Paso 2. Levantar solo MySQL
+
+```bash
+docker compose -f docker-compose.yml up -d mysql-catalogo
+```
+
+---
+
+## 🔹 Paso 3. Construir imagen
+
+```bash
 docker build -t catalogo-service .
 ```
 
-### 2. Ejecuta múltiples instancias de la app (no probado)
-Puedes lanzar varias instancias manualmente cambiando el puerto de mapeo. Ejemplo usando los valores del archivo `.env`:
-```powershell
-# Instancia 1 (puerto 8082)
-docker run -d --name catalogo1 `
-   -p 8082:8082 `
-   -e SPRING_PROFILES_ACTIVE=prod `
-   -e CATALOGO_DB_HOST=mysql-catalogo `
-   -e CATALOGO_DB_PORT=3306 `
-   -e CATALOGO_DB_NAME=db_catalogo `
-   -e CATALOGO_DB_USERNAME=root `
-   -e CATALOGO_DB_PASSWORD=root `
-   catalogo-service
+---
 
-# Instancia 2 (puerto 8083)
-docker run -d --name catalogo2 `
-   -p 8083:8082 `
-   -e SPRING_PROFILES_ACTIVE=prod `
-   -e CATALOGO_DB_HOST=mysql-catalogo `
-   -e CATALOGO_DB_PORT=3306 `
-   -e CATALOGO_DB_NAME=db_catalogo `
-   -e CATALOGO_DB_USERNAME=root `
-   -e CATALOGO_DB_PASSWORD=root `
-   catalogo-service
-```
+## 🔹 Paso 4. Ejecutar instancias
 
-# Instancia 2 (puerto 8083)
-docker run -d --name catalogo2b `
-  --network catalogo-net `
-  -p 8083:8082 `
-  -e SPRING_PROFILES_ACTIVE=prod `
-  -e CATALOGO_DB_HOST=mysql-catalogo `
-  -e CATALOGO_DB_PORT=3306 `
-  -e CATALOGO_DB_NAME=db_catalogo `
-  -e CATALOGO_DB_USERNAME=root `
-  -e CATALOGO_DB_PASSWORD=root `
+> ⚠️ Nota: En este escenario usamos la red por defecto creada por Docker Compose.
+
+### Instancia 1
+
+```bash
+docker run -d --name catalogo1 \
+  --network catalogo_default \
+  --env-file .env \
+  -p 8082:8082 \
   catalogo-service
 ```
 
-O usando Docker Compose, puedes escalar con:
-```sh
-docker compose -f docker-compose.yml up --scale catalogo=3 -d
+### Instancia 2
+
+```bash
+docker run -d --name catalogo2 \
+  --network catalogo_default \
+  --env-file .env \
+  -p 8083:8082 \
+  catalogo-service
 ```
-Esto levantará 3 instancias de la app usando la misma base de datos.
 
-### 3. Configuración necesaria para compartir la base de datos
-- Todas las instancias deben apuntar al mismo host, puerto, nombre de base de datos, usuario y contraseña (variables de entorno).
-- La base de datos debe estar accesible en red para todas las instancias.
-- No escales la base de datos MySQL con múltiples contenedores independientes; usa una sola instancia o un clúster gestionado.
-- Si usas balanceador de carga, enruta el tráfico a las distintas instancias de la app.
+### Instancia 3
 
-**Importante:**
-- No necesitas cambiar nada en el código para escalar la app, solo asegúrate de que las variables de entorno de conexión a la base de datos sean iguales en todas las instancias.
-- Si usas Docker Compose, revisa que el servicio `mysql-catalogo` esté definido como único y el servicio `catalogo` sea el que escales.
+```bash
+docker run -d --name catalogo3 \
+  --network catalogo_default \
+  --env-file .env \
+  -p 8084:8082 \
+  catalogo-service
+```
 
-## Documentación OpenAPI
+---
 
-La documentación de la API está disponible en `http://localhost:8081/swagger-ui/index.html` cuando la aplicación está en ejecución.
+## 🔹 Paso 5. Verificar
 
-## Autor
+```bash
+docker ps
+```
 
-- Angel Sullon Macalupu - 2026
+---
+
+## 🔹 Paso 6. Probar
+
+- http://localhost:8082
+- http://localhost:8083
+- http://localhost:8084
+
+---
+
+## 🔹 Paso 7. Finalizar
+
+```bash
+docker rm -f catalogo1 catalogo2 catalogo3
+docker compose -f docker-compose.yml down
+```
+
+---
+
+## 🔹 Ejecución sin `.env` (opcional)
+
+```bash
+docker run -d --name catalogo1 \
+  --network catalogo_default \
+  -p 8082:8082 \
+  -e SPRING_PROFILES_ACTIVE=prod \
+  -e CATALOGO_DB_HOST=mysql-catalogo \
+  -e CATALOGO_DB_PORT=3306 \
+  -e CATALOGO_DB_NAME=db_catalogo \
+  -e CATALOGO_DB_USERNAME=root \
+  -e CATALOGO_DB_PASSWORD=root \
+  catalogo-service
+```
+
+---
+
+# ⚠️ Problemas comunes
+
+## ❌ No conecta a MySQL
+
+Verificar:
+
+```bash
+docker ps
+```
+
+- mysql-catalogo está activo
+- nombre correcto: mysql-catalogo
+
+---
+
+## ❌ Puerto ocupado
+
+```bash
+docker ps
+docker stop <container>
+```
+
+---
+
+# 🔗 Integración futura
+
+## Config Server
+
+```properties
+SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:7071
+```
+
+## Eureka
+
+```properties
+EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://registry-server:8761/eureka
+```
+
+## Gateway
+
+```yaml
+uri: lb://catalogo
+```
+
+---
+
+# ⚠️ Alcance actual
+
+Este proyecto NO incluye aún:
+
+- API Gateway
+- Eureka
+- Config Server
+- Balanceador
+
+---
+
+# 🧠 Concepto clave
+
+Este proyecto es un microservicio que:
+
+- es independiente
+- puede escalar
+- se integrará progresivamente
+
+---
+
+# 📌 Nota final
+
+Este repositorio forma parte de una arquitectura de microservicios en evolución.
+
+# 🔧 ANEXO PR (lujo de trabajo con Git)
+
+Este flujo permite trabajar con ramas, enviar cambios y versionar el proyecto de forma ordenada.
+
+---
+
+## 🔹 1. Actualizar repositorio
+
+```bash
+git branch
+git pull origin main
+```
+
+---
+
+## 🔹 2. Crear rama de trabajo y hacer el trabajo
+
+```bash
+git checkout -b tarea/avance
+```
+###  ATENCIÓN: NO codees sin hacer los 2 pasos anteriores
+
+
+
+## 🔹 3. Realizar cambios
+
+```bash
+git add .
+git commit -m "feat: avance"
+git push -u origin tarea/avance
+```
+
+---
+
+## 🔹 4. Volver a main y limpiar rama
+
+```bash
+git checkout main
+git pull origin main
+
+git branch -d tarea/avance
+git push origin --delete tarea/avance
+```
+
+---
+
+## 🔹 5. Crear tag (versión estable)
+
+```bash
+git tag -a vs01 -m "versión estable"
+git push origin vs01
+```
+
+---
+
+## 🔹 6. Eliminar tag (si es necesario)
+
+```bash
+git tag -d vs01
+git push origin --delete vs01
+```
+
+---
+
+## 📚 Documentación adicional
+
+Ver documentación operativa en:
+
+👉 https://upeuoficial.github.io/carrera-sistemas-docs-operativos/
