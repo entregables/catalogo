@@ -329,9 +329,10 @@ docker system prune -a --volumes
 
 ## 🔹 Ejecución sin `.env` (opcional)
 
+Bash
 ```bash
 docker run -d --name catalogo1 \
-  --network catalogo_default \
+  --network catalogo-net \
   -p 8082:8082 \
   -e SPRING_PROFILES_ACTIVE=prod \
   -e CATALOGO_DB_HOST=mysql-catalogo \
@@ -341,7 +342,7 @@ docker run -d --name catalogo1 \
   -e CATALOGO_DB_PASSWORD=root \
   catalogo-service
 ```
-
+PS
 ```ps
 docker run --name catalogo3 --network catalogo-net -p 8084:8082 `
   -e SPRING_PROFILES_ACTIVE=prod `
