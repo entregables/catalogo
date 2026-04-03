@@ -325,7 +325,7 @@ Eliminar todas las imágenes
 ```bash
 docker rmi $(docker images -q)
 ```
-🚀 Elimina contenedores detenidos, imágenes no usadas, redes, cache
+🚀 Eliminar contenedores detenidos, imágenes no usadas, redes, cache
 ```bash
 docker system prune -a
 ```
@@ -348,30 +348,6 @@ docker run -d --name catalogo1 \
   -e CATALOGO_DB_USERNAME=root \
   -e CATALOGO_DB_PASSWORD=root \
   catalogo-service
-```
-
----
-
-# ⚠️ Problemas comunes
-
-## ❌ No conecta a MySQL
-
-Verificar:
-
-```bash
-docker ps
-```
-
-- mysql-catalogo está activo
-- nombre correcto: mysql-catalogo
-
----
-
-## ❌ Puerto ocupado
-
-```bash
-docker ps
-docker stop <container>
 ```
 
 ---
