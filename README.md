@@ -25,20 +25,39 @@ Actualmente incluye:
 Client → Gateway → Microservicios → Eureka → Config Server
 ```
 
-> Este repositorio implementa únicamente el microservicio **Catálogo**.
+Este repositorio implementa únicamente el microservicio **Catálogo**.
+
+Ubicación recomendada para clases/equipos:
+
+- Cada microservicio (`catalogo`, `producto`, `[otro-ms]`) vive en su propio repositorio Git.
+- Clonar cada repositorio de microservicio dentro de la carpeta `services` para trabajo integrado local.
+- Mantener la infraestructura en un único repositorio `infra` (Config Server, Registry, Gateway, etc.).
+- Estructura sugerida:
+
+```text
+ProyectosMS2026/
+  infra/
+    config-server/
+    registry-server/
+    gateway/
+  services/
+    catalogo/
+    producto/
+    [otro-ms]/
+```
 
 ---
 
-## 🧰 Pre-requisitos
-
-Antes de ejecutar el proyecto, asegúrate de tener instalado:
+## ⚙️ Tecnologías
 
 - Java 17
+- Spring Boot 3.5.x
 - Maven 3.9+
+- MySQL 8 (dentro de docker)
 - Docker
 - Docker Compose
 
-Verificar instalación:
+Antes de ejecutar el proyecto, asegúrate de tener instalado:
 
 ```bash
 java -version
@@ -46,6 +65,18 @@ mvn -v
 docker -v
 docker compose version
 ```
+## Dependencias
+
+- Spring Web
+- Spring Data JPA
+- Validation
+- Lombok
+- MySQL Driver
+- Flyway
+- Spring Boot Actuator
+- Spring Boot DevTools
+- SpringDoc OpenAPI Web (Swagger)
+
 
 ---
 
@@ -69,26 +100,34 @@ docker compose version
 
 ---
 
-## 🧠 ¿Por qué funciona `mysql-catalogo` como host?
+## Base de datos y migraciones
 
-Dentro de Docker Compose, los contenedores pueden comunicarse usando el nombre del servicio.
+Convención actual:
 
-Ejemplo:
+- Los cambios de esquema deben quedar en SQL versionado
+- Flyway ejecuta automáticamente scripts en `src/main/resources/db/migration` cuando arranca `prod`
+- Ejemplo actual: `V1__create_categoria_table.sql`
+- En `prod`, Hibernate no crea tablas; solo valida el esquema existente
 
-```env
-CATALOGO_DB_HOST=mysql-catalogo
-```
+Flujo recomendado del equipo:
 
-Esto funciona automáticamente porque Docker Compose crea una red interna por defecto.
+1. Diseñar o ajustar la tabla en SQL
+2. Probar el cambio en `dev`
+3. Crear una nueva versión SQL si corresponde (`V2`, `V3`, etc.)
+4. Aplicar el cambio en `prod`
+5. Arrancar la app en `prod` y validar
 
----
+No modificar scripts ya ejecutados; crear siempre una nueva versión.
 
 # 🚀 Ejecución en modo desarrollo (dev)
 
-## 🔹 1. Clonar repositorio
+## 🔹 1. Clonar repositorio - rama inicial
+
+Ejemplo:
 
 ```bash
-git clone <repo>
+git clone git clone --branch vs01-arquitectura-base https://github.com/261dist/catalogo.git
+
 cd catalogo
 ```
 
@@ -99,6 +138,12 @@ cd catalogo
 ```bash
 docker compose -f docker-compose-dev.yml up
 ```
+**Si no tienes Docker, otra opción es con Laragon, XAMPP, o MySQL local**
+
+- Asegúrate de que MySQL esté corriendo en tu máquina local.
+- Verifica la configuración en `src/main/resources/application-dev.yml` (host, puerto, usuario, contraseña).
+- Confirma que la BD `db_catalogo` existe.
+
 
 ---
 
@@ -113,9 +158,13 @@ mvn spring-boot:run
 ---
 
 ## 🌐 Acceso DEV
-
+Swagger:
 ```
-http://localhost:8081
+http://localhost:8081/swagger-ui.html
+```
+Health: 
+```
+http://localhost:8081/actuator/health
 ```
 
 ---
@@ -125,7 +174,7 @@ http://localhost:8081
 ## 🔹 1. Crear archivo `.env`
 
 ```env
-CATALOGO_MYSQL_ROOT_PASSWORD=una_clave_segura
+CATALOGO_MYSQL_ROOT_PASSWORD=root
 CATALOGO_MYSQL_DATABASE=db_catalogo
 
 SPRING_PROFILES_ACTIVE=prod
@@ -134,7 +183,7 @@ CATALOGO_DB_HOST=mysql-catalogo
 CATALOGO_DB_PORT=3306
 CATALOGO_DB_NAME=db_catalogo
 CATALOGO_DB_USERNAME=root
-CATALOGO_DB_PASSWORD=una_clave_segura
+CATALOGO_DB_PASSWORD=root
 ```
 
 ---
@@ -148,10 +197,15 @@ docker compose -f docker-compose.yml up -d
 ---
 
 ## 🌐 Acceso PROD
-
+API Categorias:
 ```
-http://localhost:8082
+http://localhost:8082/api/v1/categorias
 ```
+Health:
+```
+http://localhost:8082/actuator/health
+```
+Swagger: deshabilitado
 
 ---
 
